@@ -1,523 +1,228 @@
-# Manual Docker
-En este manual se cubrirán las partes basicas para el uso y manejo de contenedores e imagenes en Docker
+# DOCUMENTACIÓN LOCUST
 
 ## Indice
- - [Comandos Esenciales para Docker](#comandos-esenciales-parap-docker)
- - [Comandos basicos para contenedores](#comandos-basicos-de-docker)
- - [Uso de Dockerfile](#uso-de-dockerfiles)
- - [Uso de Docker Registry](#uso-de-docker-registry)
- - [Uso de Docker Compose](#uso-de-docker-compose)
+ - [Funcionamiento de Locust](#funcionamiento-de-locust)
+ - [Herramientas similares a Locust](#herramientas-similares-a-locust)
+   - [Locust](#locust)
+   - [Apache JMeter](#apache-jmeter)
+   - [Gatling](#gatling)
+ - [Implementación en Docker](#implementacion-en-docker)
+ - [Demostración Locust](#demostracion-locust)
+ - [Fuentes de consulta](fuentes-de-consulta)
 
-## Comandos Esenciales para Docker
-* Obervar los contenedores actualmente activos <br/> `docker ps` <br/>
-* Eliminiar contenedores que no estan activos <br/> `docker rm id_contenedor o nombre_contenedor` <br/>
-* Eliminar imagenes <br/> `docker rmi id_imagen o nombre_imagen:version` <br/>
-* Observar las imagenes guardadas localmente <br/> `docker images` <br/>
-* Detiene contenedores activos <br/> `docker stop id_contenedor o nombre_contenedor` <br/>
+## Funcionamiento de Locust
+Locust es una herramienta de testing basada en Python y es usada para prueba de cargas y simulación del comportamiento de usuarios. La prueba de carga es la práctica de testear una aplicación de software con el propósito de estresar las capacidades de la aplicación, es decir, determinar el punto de ruptura principal de la aplicación en términos de rendimiento y seguridad. Por lo tanto, Locust crea un conjunto de funciones de prueba que simulan una gran cantidad de usuarios. 
 
-![diag_docker_containers](imagenes/diag_docker_containers.png)
+Adicionalmente, Locust ofrece un conjunto de procesos llamados nodos que se pueden usar para ejecutar un conjunto de tareas. Estos nodos se conocen como trabajadores ya que realizan funciones específicas en un período determinado. Y se ofrece la capacidad de vincular estos nodos para simular una carga distribuida para operaciones de prueba de carga a gran escala. 
 
-[Regresar al inicio](#indice)
+Asimismo, Locust se puede usar como una biblioteca que encapsula el entorno de prueba usando Python. Esta biblioteca contiene métodos preempaquetados para probar sus procedimientos, funciones o métodos de clase.
 
-## Comandos basicos de Docker
-### Crear un contenedor
-Para poder crear un contenedor primero es necesario saber sobre que sistema estara trabajando dicho contenedor. En este caso haremos uno sobre centos 7
-
-El comando para hacer lo anterior es el siguiente:
-
-```
-docker create --name centosPersonal -itp 7500:80 centos:7
-```
-
-Lo que ocurre con el comando anterior es lo sugiente:
-* Con docker create decimos que vamos a crear un contenedor
-* La bandera --name sirve para darle un nombre al contenedor que crearemos(en este caso CentosPersonal)
-* La bandera -p nos ayuda a determinar que puerto será el utilizado por la computadora(en este caso el 7500) y que puerto utilizara el contenedor(en este caso el 80)
-* La bandera -i habilita la entrada de datos estandar
-* La bandera -t habilita una terminal en el contenedor
-* El centos:7 nos sirve para determinar que imagen de base será utilizada en el contenedor en este caso sera un centos cuya version es la 7
-* *Si la imagen deseada no se encontrara localmente, automaticamente buscara una en dockerhub*
-
-![creacion_imagen](imagenes/creacion_imagen.png)
-
-Habiendo hecho esto podemos confirmar que la version que se instalo de imagen es la de centos7 con ayuda del siguiente comando
-```
-docker images
-```
-*Con este comando listamos todas las imagenes instaladas localmente*
-
-![imagenes](imagenes/imagen.png)
-
-Para revisar que nuestro contenedor se haya creado exitosamente haremos uso del siguiente comando:
-```
-docker ps -a
-```
-*El comando docker ps nos ayuda a saber que contenedor esta corriendo y con la bandera -a mostramos incluso aquellos que no*
-
-![contenedores](imagenes/contenedor.png)
-
-**Listo, has creado tu primer contenedor en Docker :D!**
-
-As Abraham Lincoln once said:
-> *Pardon my French!*
-
-<br />
-### Entrar a un contenedor
-
-Para poder correr el contenedor que hemos creado hacemos uso del siguiente comando:
-```
-docker start centosPersonal
-```
-![correr_contenedor](imagenes/start_container.png)
-
-Para verificar que nuestro contenedor este corriendo hacemos uso del siguiente comando:
-```
-docker ps
-```
-![verificar_correr_contenedor](imagenes/check_running_container.png)
-
-Para entrar a nuestro contenedor para instalar alguna aplicacion o cambiar alguna configuracion hacemos uso del siguiente comando:
-
-```
-docker start -ai centosPersonal
-```
-* La bandera -a habilita la salida estandar y la salida de errores para el contenedor
-* La bandera -i habilita la entrada estandar para el contenedor
-
-![entrar_contenedor](imagenes/enter_container.png)
-<br /><br />
-### Crear un servidor
-
-Una vez dentro de nuestro contenedor podemos instalar casi cualquier cosa.<br />
-En este ejemplo intalaremos apache, para completar este proposito haremos uso del siguiente comando:
-```
-yum install httpd
-```
-![instalar_apache](imagenes/install_apache.png)
-
-Ahora lo que haremos sera modificar la pagina que se mostrara cuando hechemos a andar el contenedor.<br />
-Para poder completar este objetivo haremos uso de vi
-
-![cambiar_index](imagenes/modificar_index.png)
-
-Adentro del index que acabamos de crear pondremos un saludo al mundo porque es importante siempre hacerlo.
-
-![hola_mundo](imagenes/saludo_desde_contenedor.png)
-
-Para hacer cambios hacemos uso del `i` y para guardar cambios hacemos uso del `:w` y para salirnos de vi es con el comando `:q`
-
-Cuando hayamos finalizado con todo lo anterior nos saldremos del contenedor con ayuda del siguiente comando:
-```
-exit
-```
-![salir_contenedor](imagenes/exit_container.png)
-
-En este punto es importante notar que los cambios que hemos hecho se queda en nuestro contenedor, pero la imagen base que hemos utilizado sigue sin cambiar.<br />
-Esto quiere decir que si hacemos otro contenedor a partir de la imagen de centos7 que tenemos, el contenedor no tendra el apache instalado.<br />
-Para evitar que nuestros cambios sean perdidos haremos uso del siguiente comando:
-```
-docker commit id_contenedor nombre_imagen
-```
-![crear_imagen_nueva](imagenes/imagen_centos_apache.png)
-* El el campo de id_contenedor se debe poner el id del contenedor que queremos guardar sus cambios
-* En el campo de nombre_imagen se pondrá el nombre de la nueva imagen a generar o se puede sobreescribir alguna otra imagen
-
-Confirmamos la creacion de una nueva imagen con el siguiente comando:
-```
-docker images
-```
-![nueva_imagen_centosapache](imagenes/nueva_imagen_centosapache.png)
-
-Ya que tenemos todo preparado, lo unico restante es observar si funciona o no nuestro pequeño servidor. <br />
-Esto lo haremos con ayuda del siguiente comando
-```
-docker run -p 7500:80 centos_apache:v1 /usr/sbin/httpd -D FOREGROUND
-```
-![comando_correr_contenedor](imagenes/probar_servidor.png)
-* Con el comando */usr/sbin/httpd -D FOREGROUND* nos aseguramos que cuando el contenedor corra tambien se heche a andar el servidor apache. <br/>
-**Este comando causará que nuestra terminal se quede en estado de stand by**
-
-En nuestro navegador preferido nos conectamos al servidor apache, como esta en un contenedor se veria asi su ip y el resultado de la peticion
-
-![resultado](imagenes/checar_servidor.png)
-
-**_Puuummm!!!!! Ya creaste tu propio servidor dentro de un contenedor :D!!!_**
-
-
-Si no quedo claro como se hace el uso de puertos, en el siguiente diagrama encuentra la conexion del ejercicio anterior
-
-![diag_conexion_puertos](imagenes/diag_conexion_puertos.png)
+Finalmente, después de crear las pruebas, se pueden ejecutar en BlazeMeter que brinda informes en tiempo real con la capacidad de guardarlos para realizar comparaciones futuras para lograr una mayor escalabilidad, opciones de informes avanzadas, etc. De igual manera, se puede usar Taurus para monitorear y analizar los resultados de las pruebas o  exportar métricas con Prometheus y mostrarlas en un enfoque visualmente descriptivo usando los paneles de Grafana.
 
 [Regresar al inicio](#indice)
 
-## Uso de DockerFiles
+## Herramientas similares a Locust 
+### Locust
 
-Si nos dimos cuenta, es bastante complicado el quere levantar un servidor con docker, son bastantes comandos tanto para la creacion del propio contendor como para el montaje y funcionamiento de docker.
+**Ventajas:**
+* Debido a que está basada en Python, la implementación es más rápida y fácil.
+* Requiere menos utilización de CPU y puede ser usada con recursos limitados.
+* El modelo de simulación está basado en un enfoque asíncrono, esto permite que se simulen fácilmente miles de usuarios en un mismo dispositivo.
+* Cuando el servidor comienza, se pueden dar elementos de entrada para personalizar la carga. Locust solo soporta carga lineal.
+* Provee un monitoreo en tiempo real cuando se vincula con otras herramientas para capturar las métricas y mostrarlas.
+* Tiene un grupo de visualizaciones y reportes de prueba que resumen el proceso de prueba de cargas. 
+* Proporciona una imagen completa de la ejecución de prueba actual. 
+* Corre múltiples scripts de prueba para encontrar la principal ejecución y problemas de carga.
+* Incrementa el número de casos de prueba y compara los resultados para cada tarea, usuario y petición. 
+* Fue principalmente construido para pruebas basadas en HTTP pero puede extenderse para otros protocolos escribiendo una función propia Python. 
+* Tiene una implementación basada en eventos, por lo que es altamente escalable.
+* La implementación de pruebas a nivel de código permite la colaboración.
 
-Para ahorrarnos esto existe una tecnica milenaria llamada Dockerfile, esta tecnica nos permite en un solo paso crear un contenedor con caracteristicas y programas ya instalados.
+**Desventajas:**
+* Debido a la naturaleza de Python, cuanto mayor sea el número de usuarios simulados, más lenta será la ejecución del código.
+* No soporta picos de carga.
+* Los picos de carga repentinos no se pueden probar.
+* Se necesitan conocimientos básicos de Python para crear pruebas de rendimiento.
+* Tiene una capacidad de monitoreo limitada, sin embargo, proporciona casi toda la información requerida para monitorear una carga básica en un servidor web. 
+* La principal limitación para la escalabilidad es el bloqueo del intérprete global de Python. Locust hace el esfuerzo de evitar esta limitación al permitirle activar una prueba de carga distribuida, pero eso agrega complejidad a la ejecución de pruebas de carga aún más pequeñas.
+* Los scripts pueden resultar difíciles cuando se trabaja con una prueba compleja.
 
-Algunas cosas basicas de como dictaminar el como se comportarar el dockerfile es a traves de los siguientes comandos:
+### Apache JMeter
+Herramienta, basada en Java, diseñada para probar el rendimiento del software funcional de aplicaciones basadas en web. Las aplicaciones pueden probarse para recursos estáticos como dinámicos lo que permite probar el rendimiento, la resistencia y la  confiabilidad. Esta herramienta diseña un plan de prueba para generar un archivo .jmx, ejecutar la prueba y, finalmente, ver de distintas formas los resultados de la ejecución. 
 
-* ADD - Copia los archivos de un lugar en el host adentro del sistema de archivos del contenedor
-* CMD - Puede ser usado para ejecutar un comando especifico dentro del contenedor
-* ENTRYPOINT -  Selecciona una aplicacion por default para ser utilizada cada vez que un contenedor es creado con la imagen
-* ENV - Coloca las variables de entorno para ser utilizadas en el proceso de creado del contenedor
-* EXPOSE - Asocia un puerto especifico para habilitar la conexion entre el contenedor y el mundo exterior
-* FROM - Defina que imagen base sera utilizada para inciar el proceso de contruccion
-* MAINTAINER - Define quien fue el creeador de la imagen
-* RUN - Es la directiva central de ejecucion para DockerFiles
-* USER - Coloca el UID o nombre de usuario que correra el contenedor
-* VOLUME - Es usado para habilitar el acceso de un contenedor a un directorio en la maquina host
-* WORKDIR - Seleciona el path donde el comando, definido por el CMD, se ejecutara
-* LABEL - Permite añadir una etiqueta a tu imagen
+**Ventajas:**
+* Código abierto. 
+* El modo GUI de JMeter es un cliente de escritorio que permite construir pruebas rápidas y simples sin escribir líneas de código. 
+* Sin código, se pueden probar varios protocolos y bases de datos como JDBC, FTP, LDAP, SMTP, HTTP, HTTPS, SOAP,  XML-RPC, POP3, IMAP, SMTP, JMS y TCP. 
+* Ofrece plugins adicionales que permiten crear una carga flexible. 
+* Es la herramienta de prueba más utilizada. 
+* Tiene una funcionalidad integrada para la grabación de scripts. 
 
-Exempli gratia haremos el mismo ejemplo de como montar un servidor apache en un centos 7.
+**Desventajas:**
+* No se comporta como un navegador. 
+* No guarda ni envía cookies.
+* No interpreta código JavaScript.
+* El tester trabaja a nivel de protocolos por lo que normalmente el tester tiene que apoyarse en herramientas adicionales.
+* Los listeners consumen bastantes recursos de CPU. Por lo anterior, generalmente,  JMeter se ejecuta con un modo sin interfaz gráfica.
+* Utiliza un enfoque basado en subprocesos, lo que significa que cada usuario obtiene su propio subproceso.
+* Sin soporte para DevOps debido a la antigüedad.
 
-Primero debemos crear la carpeta de nuestro contenedor
-```
-mkdir ~/exemplo
-```
-![crear_carpeta](imagenes/carpeta_exemplo.png)
+### Gatling
+Gatling es una herramienta de prueba de carga, basada en Java, que se puede utilizar para un entorno de desarrollo integrado, sistemas de control de versiones y soluciones de integración continua. Se basa en Akka, que es un kit de herramientas para crear aplicaciones distribuidas controladas por mensajes. Es un marco distribuido que permite la computación totalmente asincrónica.
 
-Nos vamos a cambiar a la carpeta de nuestro proyecto
-```
-cd ~/exemplo
-```
-![cambiar_carpeta](imagenes/cambiarse_exemplo.png)
+**Ventajas:**
+* Soporta varios protocolos populares como HTTP, MQTT, ZeroMQ, AMQP, websockets, eventos server-sent y JMS.
+* Gatling soporta el aumento de los usuarios con picos de carga.
+* La grabación de simulación ayuda a acelerar el proceso de prueba. 
+* Fácil de usar.
+* Código abierto.  
+* Maneja usuarios virtuales con sus propios datos y los implementa como mensajes por lo que puede manejar miles de usuarios simultáneos.
+* Cuando la simulación está completa, se puede ver un reporte en el navegador.
+* Enfoque de línea de comandos.
+* Da un informe de análisis visualmente descriptivo.
+* Debido a que utiliza computadora asíncrona, reduce el impacto en el rendimiento de tener muchos usuarios en un solo subproceso.
+* No es necesario que la GUI cree y ejecute pruebas.
 
-Creamos un documento llamado Dockerfile
-```
-touch Dockerfile
-```
-![crear_dockerfile](imagenes/crear_dockerfile.png)
-
-Vamos a configurar nuestro dockerfile con ayuda de vi
-```
-Vi Dockerfile
-```
-![modificar_dockerfile](imagenes/comandos_dockerfile.png)
-
-Construimos nuestra imagen con el comando `build`
-```
-docker build -t "Exemplo:1" .
-```
-![construir_dockerfile](imagenes/build_image.png)
-
-Hechamos a andar un nuevo contenedor a partir de la imagen que creamos
-```
-docker run -dp "8500:80" exemplo:1
-```
-![correr_contenedor_imagen_nueva](imagenes/run_new_image.png)
-
-Comprobamos que se haya creado nuestro nuevo contenedor con el siguiente comando:
-```
-docker ps -a
-```
-![comprobar_imagen](imagenes/comprobar_new_image_run.png)
-
-Entramos al contenedor creado
-```
-docker exec -it id_contenedor bash
-```
-![entrar_contenedor_imgen_nueva](imagenes/enter_container_new_image.png)
-
-Comprobamos que nuestro servidor se haya creado correctamente al entrar en la siguiente pagina web
-```
-direccion_ip_host:puerto_contenedor
-```
-![comprobar_server](imagenes/nuevo_server_online.png)
+**Desventajas:**
+* Debido a que está basado en Java, están presentes las dificultades de configuración y las dependencias.
+* La versión gratuita tiene un número limitado de características.
+* La CLI no proporciona mucha información detallada durante el tiempo de ejecución.
+* Para el monitoreo en vivo a través de una interfaz web gráfica, debe integrarse en otra aplicación llamada Taurus.
+* Tiene un rendimiento promedio.
 
 [Regresar al inicio](#indice)
 
-## Uso de Docker Registry
-Docker registry es una manera sencilla de mantener a nuestro alcance las imagenes que nosostros creemos y modifiquemos desde cualquier computadora con acceso a la red. De igual manera estas imagenes pueden ser protegidas por medio de un usuario y contraseña.
+## Implementacion en Docker
+Para comenzar la implementación en Docker, se tiene que descargar la imagen que se encuentra en Docker Hub, esto mediante el comando
 
-Una manera de levantar nuestro propio servicio de Docker Registry es mediante la siguiente linea
 ```
-docker run -d -p 5000:5000 --restart=always --name registry registry:2
+docker pull locustio/locust
 ```
-**El registro solo funciona si es el puerto 5000 del contenedor**
+![docker_pull](imagenes/docker_pull.png)
 
-Con el comando anterior lo que hacemos es jalar una imagen de tipo registry y la guardamos como version 2 localmente, asi como el puerto por el cual trabajará que sera el 5000 y siempre estara activado el contenedor <br/>
+Posteriormente, se va a crear un contenedor de Locust en Docker usando el siguiente comando
 
-Por default cualquier Registry con HTTP no es validado como seguro, para poder remediar esto y nos acepte un Registry con HTTP hay que modificar el archivo JSON localizado en: <br/>
-- Linux = /etc/docker/daemon.json <br/>
-- Mac y Windows = icono de docker -> click derecho -> preferencias -> +Daemon <br/>
-- Windows Server = C:\ProgramData\docker\config\daemon.json <br/>
+```
+docker run -p 8089:8089 -v $PWD:/mnt/locust locustio/locust -f /mnt/locust/locustfile.py
+```
+![docker_container](imagenes/docker_container.png)
 
-**Si el archivo no existe hay que crearlo**
-```
-{
-  "insecure-registries" : ["myregistrydomain.com:5000"]
-}
-```
-![daemon_docker](imagenes/daemon_docker.png)
+Desglosando el comando, se tiene que,
 
-Reiniciamos docker para que se guarden los cambios
-```
-service docker restart
-```
-![service_restart_docker](imagenes/service_restart_docker.png)
+&nbsp;&nbsp;&nbsp;&nbsp;*docker run* - ejecuta el contenedor 
 
-Para probar como se maneja el Docker Registry descargaremos la imagen de hello-world con el siguiente comando
-```
-docker pull hello-world
-```
-![pull_hello_world](imagenes/pull_hello_world.png)
+&nbsp;&nbsp;&nbsp;&nbsp;*-p 8089:8089* - empareja el contenedor oficial de locust en docker y localhost en el entorno. De esta manera, se están ejecutando los archivos Locust en http://localhost:8089/. Dicho emparejamiento permite ejecutar el archivo de prueba de locust en el entorno del contenedor docker. 
 
-Creamos una imagen adicional para que docker interprete que va a pertencer a nuestro registry cuando hagamos push
-```
-docker tag hello-world ip_address:5000/hola-mundo
-```
-![docker_tag_mundo](imagenes/docker_tag_mundo.png)
+&nbsp;&nbsp;&nbsp;&nbsp;*-v $PWD:/mnt/locust locustio/locust* - el parámetro -v monta el directorio de la máquina local con el directorio del contenedor locust de Docker. Esto funciona de tal manera que todo se sincroniza entre ambos directorios. Esta sincronización permite que la información sobre las estadísticas de prueba esté disponible en el directorio local.
 
-Hacemos push de la imagen hacia nuestro registro
-```
-docker push ip_address:5000/hola-mundo
-```
-![docker_push_mundo](imagenes/docker_push_mundo.png)
+&nbsp;&nbsp;&nbsp;&nbsp;*-f /mnt/locust/locustfile.py* - Locust debe almacenarse en el directorio de trabajo actual. Por lo tanto, se copia y pega el archivo en dicho directorio. 
 
-Quitamos las imagenes locales de hello world para liberar espacio
-```
-docker image remove hello-world
-docker image remove ip_address:5000/hola-mundo
-```
-![docker_image_remove_1](imagenes/docker_image_remove_1.png)
-![docker_image_remove_2](imagenes/docker_image_remove_2.png)
+Una vez ejecutado el comando, se puede abrir el navegador y se debe observar la web-UI de Locust correctamente. Además, el registro se muestra en la terminal. 
 
-Probamos jalar la imagen de hello-world desde nuestro registro
-```
-docker pull localhost:5000/hola-mundo
-```
-![docker_pull_mundo](imagenes/docker_pull_mundo.png)
+![nav_principal](imagenes/nav_principal.png)
 
-Como se pudo observar la imagen hola-mundo es la misma que hello-world, la unica diferencia es que hello-world Docker la descarga desde Dockerhub y hola-mundo ya esta en el repositorio local, así se puede trabajar sin conexion a internet con la imagen hola-mundo
+Es importante mencionar que el archivo de locustfile.py es un archivo de prueba donde se ejecutarán todos los casos de prueba que se deseen probar en la aplicación.  Básicamente, este archivo se utiliza para probar la aplicación probando los métodos y procedimientos necesarios.
 
-### Seguridad en Docker Registry
+Entonces, para escribir un archivo de prueba sencillo, se debe empezar por importar las clases y métodos necesarios. 
 
-Crear el usuario y contraseña del Registry
 ```
-mkdir auth
-docker run --entrypoint htpasswd registry:2 -Bbn user passwd > auth/htpasswd
-```
-![create_pass](imagenes/create_pass.png)
-
-Iniciar un Docker Registry con Seguridad
-```
- docker run -d \
-  -p 5000:5000\
-  --restart=always \
-  --name registryMachicao \
-  -v "$(pwd)"/auth:/auth \
-  -e "REGISTRY_AUTH=htpasswd" \
-  -e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm" \
-  -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
-  registry:2
-```
-![Registry_Passwd](imagenes/docker_run_pass.png)
-
-Mientras no estemos logeados en nuestro dominio/registro no podremos hacer push ni pull del mismo y nos mostrara el siguiente mensaje de error
-![Not_Log_In](imagenes/not_logged_in.png)
-
-Para poder hacer push y pull nos logueamos con el siguiente comando
-```
-docker login ip_address:5000
-```
-![Log_In](imagenes/registry_login.png)
-
-Comprobamos que ya una vez logueados podemos hacer push hacia nuestro Registry
-```
-docker push ip_address:5000/nombre_imagen
-```
-![push_login](imagenes/push_login.png)
-
-#### Multiples registros
-
-Creacion de un segundo registro con seguridad en el puerto 5001
-```
- docker run -d \
-  -p 5001:5000\
-  --restart=always \
-  --name registry1 \
-  -v "$(pwd)"/auth:/auth \
-  -e "REGISTRY_AUTH=htpasswd" \
-  -e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm" \
-  -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
-  registry:2
-```
-Cabe destacar que habra que poner las direcciones ip de nuestros registros en el daemon.json y reiniciar docker, de igual manera las contraseñas que estan en auth serán compartidas para todos los registros.
-<br/><br/>
-**Exempli Gratia**<br />
-Ejemplo login con user al registro en el puerto 5000
-![Log_In](imagenes/registry_login.png)
-
-Ejemplo login con user al registro 5001
-![registry1_login](imagenes/registry1_login.png)
-
-Si se requiere hacer uso de un usuario diferente para otro registro se tiene que generar otra carpeta y otro archivo de autenticacion con el usuario deseado
-```
-mkdir auth1
-docker run --entrypoint htpasswd registry:2 -Bbn testuser testpassword > auth1/htpasswd
-```
-![create_pass_2](imagenes/create_pass_2.png)
-
-Despues levantamos otro registro con la carpeta diferente
-```
- docker run -d \
-  -p 5002:5000\
-  --restart=always \
-  --name registry2 \
-  -v "$(pwd)"/auth1:/auth1 \
-  -e "REGISTRY_AUTH=htpasswd" \
-  -e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm" \
-  -e REGISTRY_AUTH_HTPASSWD_PATH=/auth1/htpasswd \
-  registry:2
-```
-![registry_2](imagenes/registry_2.png)
-
-Intetaremos acceder al registro en el puerto 5002 con las credenciales de user
-![login_denegado](imagenes/login_denegado.png)
-
-Como se pudo observar no son reconocidas en el registro nuevo. <br/>
-Ahora intentaremos lo mismo pero con las nuevas credenciales.
-![login_aceptado](imagenes/login_aceptado.png)
-
-Como se podrá observar de esta manera podemos tener multiples registros y cada uno de ellos para un usuario diferente.
-
-#### Elminacion de registros
-
-Para eliminar nuestros registro tenemos que ejecutar la siguiente linea de ocidgo
-```
-docker container stop registry && docker container rm -v registry
+import time
+from locust import HttpUser, task, between
 ```
 
-#### Registros con CI de Gitlab
+Posteriormente, se define una clase para los usuarios que se van a simular, ésta hereda de HttpUser, que le da a cada usuario un atributo de cliente, que es una instancia de HttpSession, que se puede usar para realizar solicitudes HTTP al sistema de destino que se quiere cargar. Cuando comienza una prueba, Locust creará una instancia de esta clase para cada usuario que simula y cada uno de estos usuarios comenzará a ejecutarse dentro de su propio subproceso. 
 
-Para poder hacer uso de docker registry con gitlab es necesario seguir los siguientes pasos
-![registry_creation](imagenes/gitlab_registry.PNG)
+Es importante mencionar que para que un archivo sea un archivo locust válido, debe contener al menos una clase heredada de Usuario.
 
-A partir de este punto nosotros podemos meter nuestras imagenes al registry y llamarlas desde los dockerfiles de gitlab en CI
-![call_to_arms](imagenes/llamada_registry.PNG)
+```
+class QuickstartUser(HttpUser):
+```
+	
+Dentro de la clase, se define un tiempo de espera que hará que los usuarios simulados esperen entre 1 y 5 segundos después de ejecutar cada tarea. 
+
+```
+wait_time = between(1, 5)
+```
+
+Asimismo, se definen las tareas usando la anotación @tasks que especifica las tareas del usuario. Para cada usuario que ejecuta, Locust crea un micro-hilo que llamará a esos métodos.
+
+```
+@task
+	def hello_world(self):
+    		self.client.get("/hello")
+    		self.client.get("/world")
+
+	@task(3)
+	def view_items(self):
+    		for item_id in range(10):
+        			self.client.get(f"/item?id={item_id}", name="/item")
+        			time.sleep(1)
+
+	def on_start(self):
+    		self.client.post("/login", json={"username":"foo", "password":"bar"})
+```
+
+En este ejemplo se han declarado dos tareas, a una de ellas se le ha dado un mayor peso (3). Cuando el QuickstartUser se ejecute, elegirá una de las tareas declaradas, en este caso hello_world o view_items y la ejecutará. Al ponerle un peso de 3, hará que Locust tenga tres veces más probabilidades de elegir view_items que hello_world. Cuando una tarea ha terminado de ejecutarse, el Usuario dormirá durante el tiempo de espera y después elegirá una nueva tarea y la seguirá repitiendo.
+
+Por un lado, en la tarea hello_world, el atributo self.client permite realizar llamadas HTTP que Locust registrará y se usa get para llamar a la acción probada. Por otro lado, en la tarea view_items se cargan 10 URL diferentes usando un parámetro de consulta variable y se usa el parámetro de nombre para agrupar todas esas solicitudes en una entrada llamada "/item". Y, por último, se declaró un método on_start que se llama para cada usuario simulado cuando se inicia.
+
+Para más información de como crear un archivo de prueba, consultar [2]. 
 
 [Regresar al inicio](#indice)
 
-## Uso de Docker Compose
-Como hemos visto docker nos da varias herramienta# En Construccions poderosas a la hora de querer utilizar contenedores. <br/>
-Una herramienta mas que nos da es Compose, esta herramienta nos es util a la hora de querer levantar multiples contenedores interconectados entre si. <br/>
-Como tal en un docker compose de declaran servicios(contenedores) y que recursos utilizarán los mismos. De igual manera se configuran las diversas opciones de versiones y comandos necesarios para interconectividad entre los servicios.
+## Demostracion Locust
+Con todo lo anterior, se puede hacer la demostración ingresando los parámetros correspondientes en la pantalla principal del navegador. Al darle en iniciar, aparece una nueva pantalla donde se puede navegar a través de las distintas pestañas. 
 
-El archivo necesario para poder hacer uso de Docker Compose se llama __docker-compose.yml__ <br/>
+![locust_v1](imagenes/locust_v1.png)
 
-### Elementos de Docker Compose
-- Services <br/>
-Dentro de la etiqueta se declaran los contenedores que tendrá el archivo Compose <br/>
-![services](imagenes/services.png)
+La primera pestaña muestra las estadísticas, es decir, el número de solicitudes, el número de fallos, la media de tiempo, etc. 
 
-- Images <br/>
-Sirve para defninir la imagen a usar para construir el contenedor, puede ser llamada desde DockerHub, localmente o utilizando un DockerFile <br/>
-![images](imagenes/images.png)
+![locust_v2](imagenes/locust_v2.png)
 
-- Ports
-  - Expose
-  Sirve para mostrar los puertos para la comunicacion entre contenedores. __No para el sistema__ <br/>
-  ![expose](imagenes/expose.png) 
-  
-  - Port
-  Sirve para mostrar los puertos para comunicar el contenedor con el sistema <br/>
-  ![ports](imagenes/port.png)
-  
-- Commands <br/>
-Son usados para ejectuar acciones una vez hechado a andar el contenedor <br/>
-![commands](imagenes/command.png)
+En la segunda pestaña nos muestra las estadísticas en formato de gráficas. 
 
-- Volumes <br/>
-Son usados para la persistencia de datos generados y usados por los contenedores, de igual manera proporciona un espacio en comun para la comparticion de datos entre contenedores <br/>
-  - Normales
-  Simplemente se epecifica una locacion y se le deja a Docker que cree el volumen <br/>
-  ![volumen_normal](imagenes/volumen_normal.png)
-  - Path
-  Se define un luagar en el sistema host y se mapea a un lugar en el contenedor <br/>
-  ![volumen_path](imagenes/volumen_path.png)
-  - Nombrados
-  Se define un nombre a utilizar seguido de un lugar, este tipo de volumen es util para compartir datos entre contenedores <br/>
-  ![volumen_nombrado](imagenes/volumen_nombrado.png)
+![locust_v3](imagenes/locust_v3.png)
+![locust_v4](imagenes/locust_v4.png)
 
-- Environment <br/>
-Sirve para declarar variables de entorno para la configuracion de aplicaciones de los contendores o para variables que cambien de valor dinamicamente <br/>
-![environ](imagenes/environ.png)
+En la tercera y cuarta pestaña se pueden observar los fallos y excepciones, en caso de que existan.
 
-- Dependencies <br/>
-Sirve para declarar si un servicio necesta que otro ya este activo antes de iniciar a ejecutarse <br/>
-![dependencies](imagenes/depen.png)
+![locust_v5](imagenes/locust_v5.png)
 
-- Linking <br/>
-Sirve para generar aliases para que los servicios puedan comunicarse con otros servicios <br/>
-![linking](imagenes/linking.png)
+En la quinta pestaña se muestran la relación por usuario con las tareas probadas. 
 
-### Exempli Gratia
-En este ejemplo haremos una aplicacion de Wordpress con su backend necesario.
-Generalmente si quiseramoms hacer lo anterior tomaria algo de tiempo configurar las base de datos asi como el proceso de montado de la misma, de igual manera al instalar Wordpress configurarlo para que los puertos conincidan y se puedan comunicar entre ellos
-<br/><br/>
-Docker compose nos facilita todo este imbroglio burocratico al poder levantar servicios y conectarlos en un solo paso. <br/>
+![locust_v6](imagenes/locust_v6.png)
 
-En el siguiente archivo el cual se llama docker-compose.yml hace todo lo anterior.
+Y, finalmente, en la última pestaña se puede descargar el reporte en formato CSV. 
 
-```
-version: '3.3'
+Adicionalmente, al parar el proceso de Locust en la terminal, se muestra un reporte. 
 
-services:
-   db:
-     image: mysql:5.7
-     volumes:
-       - db_data:/var/lib/mysql
-     restart: always
-     environment:
-       MYSQL_ROOT_PASSWORD: somewordpress
-       MYSQL_DATABASE: wordpress
-       MYSQL_USER: wordpress
-       MYSQL_PASSWORD: wordpress
+![locust_t1](imagenes/locust_t1.png)
+![locust_t2](imagenes/locust_t2.png)
+![locust_t3](imagenes/locust_t3.png)
 
-   wordpress:
-     depends_on:
-       - db
-     image: wordpress:latest
-     volumes:
-       - wp-content:/var/www/html/wp-content
-     ports:
-       - "8000:80"
-     restart: always
-     environment:
-       WORDPRESS_DB_HOST: db:3306
-       WORDPRESS_DB_USER: wordpress
-       WORDPRESS_DB_PASSWORD: wordpress
-       WORDPRESS_DB_NAME: wordpress
-       
-volumes:
-    db_data: {}
-    wp-content: {}
-```
+[Regresar al inicio](#indice)
 
-En el ejemplo anterior ocurre lo siguiente:
-* Se declaran los serivcios de db y wordpress
-* En el servicio de db se declara lo siguiente: 
-    * La imagen a usar sera de mysql en su version 5.7 
-    * Se declara que siempre estara activado el servicio 
-    * Se declaran las variables de entorno para conectarse con wordpress
-* En el servicio de wordpress ocurre lo siguiente:
-    * Se declara que primero debe de estar activo el servicio de db para que se pueda iniciar el servicio de wordpress
-    * Se declara que el puerto a utilizar sera el 8000 y dentro del contenedor sera el 80
-    * Se declara que siempre estara activo el servicio
-    * Se declaran variables de entorno para poder conectarse con la db
-* Se declara un volumen llamado db_data el cual sera utilizado por la db para la persistencia de datos
-* Se declara el columen wp-content donde seran guardados el contenido de los usuarios de wordpress
- 
 
-Para poder construir este proyecto se hace uso del siguiente comando
-```
-docker-compose up -d
-```
-#### Diagrama de conexiones
+## Fuentes de consulta 
 
-![docker_compose_conns](imagenes/docker_compose_conns.png)
+[1] Chercher Tech. (s.f.). *Locust Test on Docker*. Recuperado de: https://chercher.tech/locust-python/locust-docker
+
+[2] Locust docs. (s.f.). *Writing a locustfile*. Recuperado de: https://docs.locust.io/en/stable/writing-a-locustfile.html
+
+[3] Chercher Tech. (s.f). *Locust Web Interface statistics*. Recuperado de: https://chercher.tech/locust-python/locust-web-ui
+
+[4] Universidad de California en Los Angeles. (s.f.). *Quick Tutorial on Locust*. Recuperado de: http://oak.cs.ucla.edu/refs/locust/index.html
+
+[5] Echout, M. (10 de marzo de 2022). *What is Locust Load Testing?* Recuperado de: https://www.blazemeter.com/blog/locust-load-testing 
+
+[6] Damburagamage, C. (31 de enero de 2022). *Gatling vs Locust: What are the differences and when to use them?* Recuperado de: https://www.blazemeter.com/blog/gatling-vs-locust 
+
+[7] Miles, L. (25 de febrero de 2021). *Choosing the right lad testing tool - JMeter vs Locust vs Goose.* Recuperado de: https://www.tag1consulting.com/blog/jmeter-vs-locust-vs-goose 
+
+[8] Loadium. (19 de octubre de 2021). *JMeter vs. Locust | Choosing The Right Load Testing Tool – Part1.* Recuperado de: https://loadium.com/blog/jmeter-vs-locust-part1 
+
+[9] Bushnev, Y. (16 de octubre de 2020). *JMeter vs Locust: Which one should you choose?* Recuperado de: https://www.blazemeter.com/blog/jmeter-vs-locust 
+
+[10] Loadview. (9 de noviembre de 2021). *Pruebas de carga de Gatling: Cómo hacerlo, Pruebas distribuidas y ejemplos.* Recuperado de: https://www.loadview-testing.com/es/blog/pruebas-de-carga-de-gatling-como-hacerlo-pruebas-distribuidas-y-ejemplos/
 
 [Regresar al inicio](#indice)
