@@ -166,7 +166,7 @@ En este ejemplo se han declarado dos tareas, a una de ellas se le ha dado un may
 
 Por un lado, en la tarea hello_world, el atributo self.client permite realizar llamadas HTTP que Locust registrará y se usa get para llamar a la acción probada. Por otro lado, en la tarea view_items se cargan 10 URL diferentes usando un parámetro de consulta variable y se usa el parámetro de nombre para agrupar todas esas solicitudes en una entrada llamada "/item". Y, por último, se declaró un método on_start que se llama para cada usuario simulado cuando se inicia.
 
-Para más información de como crear un archivo de prueba, consultar [2]. 
+Para más información de cómo crear un archivo de prueba, consultar [2]. 
 
 [Regresar al inicio](#indice)
 
@@ -188,7 +188,7 @@ En la tercera y cuarta pestaña se pueden observar los fallos y excepciones, en 
 
 ![locust_v5](imagenes/locust_v5.png)
 
-En la quinta pestaña se muestran la relación por usuario con las tareas probadas. 
+En la quinta pestaña se muestra la relación por usuario con las tareas probadas. 
 
 ![locust_v6](imagenes/locust_v6.png)
 
